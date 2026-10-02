@@ -38,6 +38,8 @@ npm run dev          # http://localhost:5174
 
 Without an API key the app replays the recorded Jev answers in `data/recorded.json`. To call Jev live, copy `.env.example` to `.env`, set `TYPESAFE_API_KEY`, restart, and choose **Live Jev**. Live mode also lets you write your own tickets. The key stays on the server.
 
+**New to Node.js, on Windows, or prefer Docker?** Follow the step-by-step guide: [Running CertRadar locally](docs/running-locally.md). It covers installing Node.js, live mode, tests, production builds, Docker, and troubleshooting.
+
 ## How a ticket is triaged
 
 ```mermaid
