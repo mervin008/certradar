@@ -1,5 +1,5 @@
 // Runs every sample ticket through an ordinary LLM with the same pipeline as Jev,
-// so the LinkedIn comparison uses measured numbers instead of estimates.
+// so the comparison uses measured numbers instead of estimates.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { GoogleGenAI } from '@google/genai';
 import { runChecks, tickets, type Triage } from '../src/pki';

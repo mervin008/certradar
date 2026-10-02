@@ -183,12 +183,11 @@ server/
   baseline.ts       the same pipeline on an ordinary LLM, for comparison
   app.ts            Express API: /api/config, /api/triage, origin check, rate limit
   index.ts          dev (Vite middleware) and production server entry
-scripts/            record.ts, baseline.ts, compare.ts
+scripts/            record.ts, baseline.ts, compare.ts (re-record and compare runs)
 data/
   recorded.json     recorded Jev run that the demo replays
   baseline.json     recorded ordinary-LLM run
 tests/              vitest: PKI checks and policy, API boundary
-blog/, social/      the write-up and launch posts
 ```
 
 ## Deploying

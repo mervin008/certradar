@@ -8,3 +8,7 @@ linkedin/
 .vercel
 .env*
 .DS_Store
+# Drafts and launch posts, kept locally only
+blog/
+social/
+scripts/linkedin-bold.py
