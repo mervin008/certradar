@@ -1,0 +1,35 @@
+{
+  "name": "certradar",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx --env-file-if-exists=.env server/index.ts",
+    "build": "tsc --noEmit && vite build",
+    "start": "NODE_ENV=production tsx --env-file-if-exists=.env server/index.ts",
+    "record": "tsx --env-file-if-exists=.env scripts/record.ts",
+    "test": "vitest run",
+    "baseline": "tsx --env-file-if-exists=.env scripts/baseline.ts"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/ibm-plex-sans": "^5.3.0",
+    "@google/genai": "^2.23.0",
+    "@phosphor-icons/react": "^2.1.10",
+    "@typesafe-ai/sdk": "^0.6.0",
+    "express": "^5.2.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.0",
+    "vitest": "^4.1.11"
+  }
+}

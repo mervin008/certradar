@@ -1,0 +1,9 @@
+# Never upload secrets or local artifacts. The public site is the static recorded run only.
+.env
+.env.*
+!.env.example
+node_modules
+dist
+linkedin
+*.log
+blog

@@ -1,0 +1,165 @@
+SOCIAL COPY — early access to Jev (TypeSafe AI), and what I built with it
+Demo: https://certradar-jev.mervinjones.dev
+Write-up: https://mervinjones.dev/blog/certificate-triage-decision-model.html
+Media: ../linkedin/videos/, ../linkedin/screenshots/
+
+The story here is Jev: a new AI model I got early access to, and how I used it.
+The certificate tool is the proof, not the headline. For friends, "it's not a
+chatbot, you can't talk to it" is the line that lands.
+
+
+=== WHATSAPP — STATUS (short, links are clickable) ===
+
+Got early access to Jev 🤖 — new AI model from TypeSafe, launched last week.
+
+It's a strange one: it can't write a single sentence. You hand it a situation and
+a list of questions, and it hands back answers with a probability on each.
+
+Spent an evening building something real with it. A third of a second per decision,
+9 cents per thousand.
+
+In : https://lnkd.in/p/eSVnmdSN
+Demo, on synthetic data: https://certradar-jev.mervinjones.dev/
+
+
+=== WHATSAPP — MESSAGE TO FRIENDS (personal, send 1:1 or to a group) ===
+
+Got into the early access for *Jev*, a new AI model that launched last week.
+
+It's not a chatbot. You genuinely can't talk to it — it cannot produce a sentence.
+What it does instead: you give it a situation plus a list of questions, and it
+answers each one with a probability. Which option. How bad. Yes or no, and how
+sure.
+
+So I spent the week finding out what that's actually good for, using my own work
+as the test. (Quick context: every padlock next to a website address is a
+certificate, they all expire, and I look after a few thousand of them.)
+
+The thing I built reads a complaint like *"we renewed it but it's still broken"*,
+works out which certificate out of 500 is the actual problem, and asks a question
+when it can't tell. A third of a second each. The whole test run cost me about a
+tenth of a cent.
+
+Then I rebuilt the exact same thing on a normal ChatGPT-style model to compare.
+Same accuracy — but 10x the cost, twice as slow, and here's the bit I keep
+telling people: it answered *"100% certain"* to every single question, including
+one where it was plainly wrong. Jev gave that same question 29%.
+
+That difference is the entire reason this kind of model exists.
+
+https://certradar-jev.mervinjones.dev
+
+
+=== WHATSAPP — MESSAGE FOR WORK / TECH GROUPS ===
+
+Got early access to Jev, TypeSafe's System One model from last week's launch.
+Not an LLM — no text generation. You send state plus typed questions (choice,
+score, yes/no) and get typed answers with calibrated probabilities back.
+
+Built certificate incident triage with it to see where it fits. The split that
+worked: code does expiry, chain building, SAN matching and CAA, plus finding
+which of 500 certs a ticket is about. The model only reads the ticket and weighs
+findings for the certs code already matched. Never sees the inventory — 12
+candidates max, so cost doesn't scale with the estate.
+
+Best moment: a ticket with no hostname mapped to a service with 81 certificates,
+so it asked the reporter for the CN instead of guessing. The answer led to a pod
+still serving a cert that expired 3 hours earlier while the renewed one sat
+undeployed.
+
+Also rebuilt the same pipeline on gemini-3.5-flash-lite as a control. Same
+accuracy, 10x cost, 2.4x latency — and every evidence answer came back 1.00,
+including an obviously unrelated one. Jev said 0.29 to that. Calibration is the
+whole product.
+
+Demo: https://certradar-jev.mervinjones.dev
+Write-up: https://mervinjones.dev/blog/certificate-triage-decision-model.html
+
+
+=== INSTAGRAM — STORY, FRAME 1 ===
+
+got early access to a new AI model
+that can't write a single sentence 🤖
+
+
+=== INSTAGRAM — STORY, FRAME 2 ===
+
+no chat. no paragraphs.
+you ask typed questions,
+it answers with probabilities
+
+
+=== INSTAGRAM — STORY, FRAME 3 (link sticker goes here) ===
+
+so I spent a week of evenings
+pointing it at my actual job →
+
+
+=== INSTAGRAM — FEED CAPTION (carousel or video) ===
+
+I got early access to Jev, a new AI model that launched last week, and it broke
+my expectations in a good way.
+
+It can't write. At all. No chat, no paragraphs, nothing to copy out. You hand it
+a situation and a list of questions, and it gives you an answer per question with
+a probability attached. Which option. How urgent. Yes or no, and how sure it is.
+
+So I spent a week of evenings pointing it at my actual job.
+
+Quick context: every padlock next to a website address is a certificate, they all
+expire, and I look after a few thousand of them. The tool I built reads a
+complaint like "we renewed it but it's still broken", works out which certificate
+out of 500 is actually wrong, and asks a question when it can't tell.
+
+A third of a second per decision. The entire test run cost about a tenth of a
+cent.
+
+Then I built the same thing again on a normal ChatGPT-style model, to check I
+wasn't fooling myself. Same accuracy — but ten times the cost, twice as slow, and
+it claimed 100% certainty on every single question. Including one where it was
+completely wrong. Jev gave that one 29%.
+
+Knowing when it isn't sure turns out to be the whole product.
+
+Link in bio 🔒
+
+#ai #machinelearning #typesafe #cybersecurity #cloudsecurity #devops
+#buildinpublic #sideproject #coding
+
+
+=== INSTAGRAM — SHORTER CAPTION ===
+
+Got early access to Jev, an AI model that launched last week and can't write a
+single sentence.
+
+No chat. You ask typed questions, it answers each one with a probability.
+
+I spent a week of evenings pointing it at my day job (certificates — the padlock
+next to a website address). It reads a complaint, finds which of 500 certificates
+is actually broken, and asks a question when it can't tell. A third of a second
+each, a tenth of a cent for the whole run.
+
+Built the same thing on a ChatGPT-style model to compare: same accuracy, 10x the
+cost, and it said "100% sure" to everything — including the one it got wrong.
+
+Link in bio 🔒
+
+#ai #machinelearning #cybersecurity #devops #buildinpublic #coding
+
+
+=== NOTES ===
+
+- Instagram captions can't have clickable links. Link sticker on a story, or bio
+  for the feed post.
+- WhatsApp: *single asterisks* = bold. Links are clickable and the first one gets
+  a preview card.
+- "ChatGPT-style model" is deliberate for the non-technical versions — the actual
+  control was gemini-3.5-flash-lite, which is named properly in the tech version
+  and the blog post.
+- The numbers: a third of a second = 368 ms median over 14 tickets. 10x cost and
+  2.4x latency come from the 9-ticket comparison. A tenth of a cent = $0.0013 for
+  the whole run.
+- Videos in ../linkedin/videos/ are 1280x720 landscape — fine for WhatsApp and an
+  IG feed post, but Reels and Stories want 9:16 vertical.
+- Carousel idea: screenshot 07 (it asks for the CN), 08 (what it found), 11 (Jev
+  vs the ordinary LLM).
