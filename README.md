@@ -1,8 +1,12 @@
 # CertRadar
 
-Certificate incident triage for a synthetic PKI estate, built with [TypeSafe Jev](https://docs.typesafe.ai).
+**Certificate incident triage that knows which parts need judgment and which need exact code.** Built with [TypeSafe Jev](https://docs.typesafe.ai).
 
-Support tickets about certificates are rarely precise. "We renewed it but it's still broken" could be a stale load balancer node, a missing intermediate, or nothing to do with TLS. CertRadar splits the work the way a PKI team would:
+[**Live demo**](https://certradar-jev.mervinjones.dev) · [**Write-up**](https://mervinjones.dev/blog/certificate-triage-decision-model.html) · [Jev docs](https://docs.typesafe.ai)
+
+![CertRadar triaging a certificate ticket](public/og.png)
+
+Support tickets about certificates are rarely precise. "We renewed it but it's still broken" could be a stale load balancer node, a missing intermediate, or nothing to do with TLS. CertRadar splits the work the way a PKI team would: **code** does everything that has an exact answer, **Jev** reads the human prose and returns calibrated probabilities, and **code** turns those probabilities into an action through an explicit, inspectable policy.
 
 | Code does (exact) | Jev does (judgment) |
 | --- | --- |
@@ -13,7 +17,50 @@ Support tickets about certificates are rarely precise. "We renewed it but it's s
 | Detecting nodes still serving a superseded serial | |
 | **The routing policy**: run a runbook, ask a human, or hand off | |
 
+## Highlights
+
+- **10 of 14** labelled tickets handled without a human, **0 wrong automatic actions** at the default thresholds.
+- **About $0.0001 per ticket**, flat whether the estate has 500 certificates or 10 million, because Jev only ever sees a handful of them.
+- **Asks instead of guessing.** When it cannot tell which certificate a ticket is about, it asks the reporter for the CN, the exact error, where it fails, and since when.
+- **Nothing hidden.** Every Jev call shows the exact JSON sent and received, its tokens, time, and price, and every routing rule shows as passed or failed.
+- **Runs without an API key.** The demo replays a recorded run against live Jev; add a key to triage your own tickets.
+
+## Quick start
+
+Requires Node.js 22+.
+
+```sh
+git clone https://github.com/mervin008/certradar.git
+cd certradar
+npm install
+npm run dev          # http://localhost:5174
+```
+
+Without an API key the app replays the recorded Jev answers in `data/recorded.json`. To call Jev live, copy `.env.example` to `.env`, set `TYPESAFE_API_KEY`, restart, and choose **Live Jev**. Live mode also lets you write your own tickets. The key stays on the server.
+
 ## How a ticket is triaged
+
+```mermaid
+flowchart TD
+    T["Support ticket<br/>(subject, body, optional CN form)"]
+    E[("Synthetic estate<br/>500 certificates")]
+
+    E --> C["<b>Code</b> · runChecks()<br/>expiry, chains, SANs, CAA, stale serials"]
+    T --> L["<b>Code</b> · find the certificates<br/>CN from form, else known hostnames"]
+    T --> J1["<b>Jev request 1</b> · ticket only<br/>cause (Choice) · urgency (Score) · service (Choice)"]
+
+    L -- "host matched" --> J2
+    J1 -- "no host: use service pick" --> J2
+    C --> J2["<b>Jev request 2</b> · ticket + ≤12 candidate certs<br/>one yes/no (Noul) per finding"]
+
+    J1 --> P{"<b>Code</b> · routing policy"}
+    J2 --> P
+
+    P --> A["Suggest a runbook"]
+    P --> Q["Ask the reporter"]
+    P --> R["PKI engineer review"]
+    P --> O["Hand to the app team"]
+```
 
 The estate has 500 synthetic certificates (a seeded generator adds regional storefronts, internal tools, Kafka and Postgres nodes, and hundreds of short-lived mTLS pod certificates around the hand-written scenarios). Jev never sees that inventory.
 
@@ -24,6 +71,21 @@ The estate has 500 synthetic certificates (a seeded generator adds regional stor
 5. **Code applies the policy.** If CertRadar cannot tell which certificate the ticket is about (no host, an unsure service pick, or more than 12 matches), it **asks the reporter** for the CN, the exact error, where it fails, and since when, then triages again. A runbook is offered only when Jev's reading and the evidence agree and clear their thresholds.
 
 Because Jev only ever sees a handful of certificates, the cost per ticket does not grow with the inventory: about $0.0001 whether the estate has 500 certificates or 10 million. Sample tickets are triaged with their evaluation labels stripped; a test guards this.
+
+### The routing policy
+
+`route()` in `src/pki.ts` checks these rules in order and stops at the first failure:
+
+| Rule | Default threshold | If it fails |
+| --- | --- | --- |
+| Is it a certificate problem? | Cause `not_certificate` at ≥ 60% and no finding linked at ≥ 50% | Hand to the owning application team |
+| Do we know which certificate it is about? | Host matched, or service pick ≥ 60%, and ≤ 12 candidates | Ask the reporter |
+| Is Jev confident about the cause? | Cause confidence ≥ 60% | PKI engineer review |
+| Does a finding explain the ticket? | Strongest finding link ≥ 50% | PKI engineer review |
+| Do the ticket reading and the evidence agree? | Finding type compatible with the cause | PKI engineer review |
+| All pass | | Suggest the matching runbook step |
+
+The thresholds live in `defaultPolicy` and can be moved with sliders in the evaluation panel, which recomputes accuracy and wrong automatic actions instantly.
 
 ## What a viewer sees
 
@@ -64,31 +126,82 @@ Accuracy ties, and the two miss different tickets. The difference is in the prob
 
 Caveats: 9 tickets, one run each; the baseline is a straightforward implementation with no prompt tuning; Jev used more tokens (19,981 vs 12,668 input) and is still 10x cheaper because output is free and input is ~18x cheaper. Prices in `src/pki.ts` come from the providers' published pages.
 
-## Hosted demo
+## Configuration
 
-https://certradar-jev.mervinjones.dev — the recorded run, no API key needed. Live mode only appears when you run the server yourself.
+All settings are environment variables, read from `.env` if present. Start from `.env.example`. Never commit `.env`; it is ignored by Git and by Vercel.
 
-## Run it
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `TYPESAFE_API_KEY` | *(empty)* | Enables live Jev. Without it the app runs in recorded mode only. |
+| `TYPESAFE_MODEL` | `jev-latest` | Model alias or pinned version, for example `jev-1.13.0`. |
+| `PORT` | `5174` | Server port. |
+| `HOST` | `127.0.0.1` | Bind address. Set `0.0.0.0` to expose the server beyond localhost. |
+| `GEMINI_API_KEY` | *(empty)* | Only for `npm run baseline`, the ordinary-LLM comparison. |
 
-Requires Node.js 22+.
+## Commands
 
 ```sh
-npm install
-npm run dev          # http://localhost:5174
-```
-
-Without an API key the app replays the recorded Jev answers. To call Jev live, copy `.env.example` to `.env`, set `TYPESAFE_API_KEY`, restart, and choose **Live Jev**. Live mode also lets you write your own tickets. The key stays on the server.
-
-```sh
+npm run dev          # dev server with hot reload, http://localhost:5174
+npm test             # PKI checks, routing policy, API boundary (mocked TypeSafe transport)
+npm run build        # strict type check + production build into dist/
+npm start            # serve the build and API
 npm run record       # re-run all sample tickets against live Jev and update data/recorded.json
 npm run baseline -- gemini-3.5-flash-lite [--only T-101,T-102]   # same pipeline on an LLM, needs GEMINI_API_KEY
-npm test             # PKI checks, routing policy, API boundary (mocked TypeSafe transport)
-npm run build        # strict type check + production build
-npm start            # serve the build and API
+npx tsx scripts/compare.ts                                        # Jev vs baseline table from the two data files
 ```
+
+## API
+
+The Node server exposes two endpoints. Both reject cross-origin requests and are never cached.
+
+| Endpoint | Description |
+| --- | --- |
+| `GET /api/config` | `{ "live": boolean, "model": string }`: whether live Jev is configured, and which model. |
+| `POST /api/triage` | Triages one ticket against live Jev. Returns `503` when no API key is set. |
+
+```json
+{
+  "ticket": {
+    "subject": "Android app can't connect since this morning",
+    "body": "Users on Android get a certificate error, iOS is fine.",
+    "reporter": "Mobile team",
+    "details": { "cn": "api.acme-retail.test", "client": "Android 7", "since": "08:00" }
+  }
+}
+```
+
+`subject` (≤ 160 chars) and `body` (≤ 2,000 chars) are required; `reporter` and the `details` fields (`cn`, `error`, `client`, `since`) are optional. The server copies only these fields before anything reaches the model, caps request bodies at 8 KB, and allows 30 triages per minute with at most 3 in flight. It is a demo server, not a multi-tenant service.
+
+## Project layout
+
+```text
+src/
+  pki.ts            synthetic estate, runChecks(), certificate lookup, route() policy, grading, prices
+  App.tsx           the UI: tickets, four-step explanation, evaluation panel
+server/
+  triage.ts         the two Jev requests (symptoms, evidence) and answer validation
+  baseline.ts       the same pipeline on an ordinary LLM, for comparison
+  app.ts            Express API: /api/config, /api/triage, origin check, rate limit
+  index.ts          dev (Vite middleware) and production server entry
+scripts/            record.ts, baseline.ts, compare.ts
+data/
+  recorded.json     recorded Jev run that the demo replays
+  baseline.json     recorded ordinary-LLM run
+tests/              vitest: PKI checks and policy, API boundary
+blog/, social/      the write-up and launch posts
+```
+
+## Deploying
+
+The hosted demo is a static Vite build on Vercel (`vercel.json`): it serves the recorded run only, and live mode never appears there. `.vercelignore` keeps `.env` files, `node_modules`, `dist`, and drafts out of the upload. To offer live triage, run the Node server (`npm run build && npm start`) somewhere the API key can stay server-side.
 
 ## Limits
 
 - All data is synthetic. Nothing parses real certificates or contacts real hosts.
 - Thresholds are defaults to evaluate, not tuned values.
 - Model output is typed and validated, but typed does not mean correct. Every automatic action in this demo is a suggested runbook step, never executed.
+
+## Related
+
+- [CertPilot](https://github.com/certpilot/certpilot): open-source PKI and certificate lifecycle management.
+- [TypeSafe docs](https://docs.typesafe.ai): Jev, the System One API, and model pricing.
